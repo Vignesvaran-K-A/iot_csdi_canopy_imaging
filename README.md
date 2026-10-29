@@ -1,68 +1,38 @@
-# Canopy Vision - Automated Image Processing Portal
+# IoT CSDI Canopy Imaging
 
-A high-performance web portal for automating the end-to-end canopy image processing pipeline previously executed manually in Colab/Jupyter notebooks.
+Repository for the IoT Canopy Imaging research project and image processing pipelines.
 
----
+## 📁 Repository Structure
 
-## 🌟 Key Features
-
-1. **High-Speed ZIP Upload (~100 MB+)**
-   - Streamed chunk-based upload directly to disk (bypasses memory buffering).
-   - Real-time upload speed (MB/s), elapsed time, transferred MBs, and progress bar.
-2. **Automated Internal Pipeline Execution**
-   - No separate notebook runs or manual variable adjustments (`day_09`, `day_03`, etc.).
-   - Discovers all raw canopy images (`.jpg`, `.jpeg`, `.png`, etc.) recursively from the extracted archive.
-   - Automatically executes:
-     - **Depth Anything V2 Estimation**: Generates normalized metric depth maps.
-     - **RGB to HSI Color Transformation**: Computes Hue, Saturation, and Intensity channels.
-     - **HSIE Multi-Channel Fusion**: Fuses Hue ($H$), Saturation ($S$), and Normalized Depth ($D$) into composite 3-channel representations.
-3. **Downloadable Processed ZIP**
-   - Automatically packages all processed results (`hsie_enhanced`, `depth_maps`, `hsi_images`) into `processed_<dataset_name>.zip`.
-   - 1-click persistent browser download.
-4. **Interactive Sidebar Sample Comparison**
-   - Automatically extracts sample pairs for instant visual verification.
-   - Compares **Raw Canopy Image** with:
-     - **HSIE Enhanced** (Fused)
-     - **Depth Map** (Depth Anything V2)
-     - **HSI Color**
-   - Click any comparison card to inspect in full-resolution side-by-side zoom modal.
-5. **Real-Time Live Logs & Execution Steps**
-   - Server-Sent Events (SSE) live updates displaying active file name, processed count, and terminal log messages.
+* **[`automated_image_processing_pipeline/`](./automated_image_processing_pipeline)**: End-to-end automated web portal for canopy image processing.
+  * **Backend**: FastAPI web server with streaming 100MB+ ZIP upload, live SSE progress tracking, and high-speed ZIP export.
+  * **Core Pipeline**: Depth Anything V2 depth estimation, RGB-to-HSI color transformation, and HSIE multi-channel fusion.
+  * **Frontend**: Interactive web dashboard with real-time progress monitor, execution log terminal, and sidebar with sample comparison viewer (Raw vs HSIE / Depth / HSI).
+  * **Notebooks**: Original research Colab notebook (`Okra_Shoot_HSI_Depth_Annotation.ipynb`).
 
 ---
 
-## 🚀 How to Run the Portal
+## 🚀 Quick Start (Automated Image Pipeline Portal)
 
-### Method 1: Using the Batch Launcher (Easiest)
-Simply double-click:
-```bat
-start.bat
+Navigate into the pipeline folder:
+```bash
+cd automated_image_processing_pipeline
 ```
 
-### Method 2: Command Line (PowerShell / Command Prompt)
-Navigate to the project directory and run:
+Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+Run the portal:
 ```bash
 python run_portal.py
 ```
+Or double-click `start.bat` on Windows. The portal opens at **`http://127.0.0.1:8000`**.
 
-The portal will start on **`http://127.0.0.1:8000`** and automatically open in your default browser!
+See the [Pipeline Documentation](./automated_image_processing_pipeline/README.md) for full details.
 
 ---
 
-## 📁 Output Directory Structure
-When a dataset (e.g. `day_09.zip`) is processed, the system creates:
-```
-data/
-├── uploads/
-│   └── job_<id>/
-│       └── day_09.zip
-└── processed/
-    └── job_<id>/
-        ├── raw/                # Extracted original images
-        ├── processed/
-        │   ├── hsie_enhanced/  # Multi-channel fused images (*_hsie.png)
-        │   ├── depth_maps/     # Metric depth estimations (*_depth.png)
-        │   └── hsi_images/     # HSI color images (*_hsi.png)
-        └── processed_day_09.zip # Ready-to-download archive
-```
-
+## 📜 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

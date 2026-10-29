@@ -5,8 +5,11 @@ __pycache__/
 
 # Data & Uploads (Runtime datasets and output archives)
 data/
+**/data/
 uploads/
+**/uploads/
 *.zip
+**/*.zip
 *.tar.gz
 *.rar
 
@@ -21,6 +24,7 @@ dist/
 # Logs & Temp files
 *.log
 test_tmp/
+**/test_tmp/
 
 # OS generated files
 .DS_Store

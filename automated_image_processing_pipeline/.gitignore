@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data & Uploads (Runtime datasets and output archives)
+data/
+**/data/
+uploads/
+**/uploads/
+*.zip
+**/*.zip
+*.tar.gz
+*.rar
+
+# Environment & Dependencies
+.env
+env/
+venv/
+ENV/
+build/
+dist/
+
+# Logs & Temp files
+*.log
+test_tmp/
+**/test_tmp/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE config
+.idea/
