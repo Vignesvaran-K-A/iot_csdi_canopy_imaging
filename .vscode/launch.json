@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "▶ Run Canopy Vision Portal",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run_portal.py",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
+
