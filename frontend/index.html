@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canopy Vision - Automated Image Processing Portal</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            Canopy Vision Portal
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">Pipeline v2.0</span>
+          </h1>
+          <p class="text-xs text-slate-400">Automated RGB &rarr; Depth Anything V2 + HSI + HSIE Fusion</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4 text-xs">
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Engine: <strong>Depth-Anything-V2-Small</strong></span>
+        </div>
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-300">
+          <i data-lucide="cpu" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span id="device-indicator">Ready</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout (Left Main Stage + Right Sidebar) -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT STAGE: Upload & Processing Console (Col 1 to 7) -->
+    <section class="lg:col-span-7 flex flex-col gap-6">
+
+      <!-- Upload Container Card -->
+      <div id="upload-card" class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl relative overflow-hidden transition-all duration-300">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-semibold text-white flex items-center gap-2">
+              <i data-lucide="upload-cloud" class="w-5 h-5 text-emerald-400"></i>
+              Upload Dataset ZIP
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Upload raw canopy image ZIP archive (supports ~100MB+ quickly)</p>
+          </div>
+          <span class="text-xs px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 border border-slate-700 font-mono">.zip format</span>
+        </div>
+
+        <!-- Drag & Drop Zone -->
+        <div id="drop-zone" class="border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-xl p-8 text-center transition-all duration-200 cursor-pointer bg-slate-950/40 hover:bg-slate-950/70 group">
+          <input type="file" id="file-input" accept=".zip" class="hidden">
+          
+          <div class="flex flex-col items-center justify-center gap-3">
+            <div class="w-14 h-14 rounded-full bg-slate-800 group-hover:bg-emerald-500/10 flex items-center justify-center text-slate-400 group-hover:text-emerald-400 transition-colors">
+              <i data-lucide="folder-archive" class="w-7 h-7"></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-slate-200">
+                <span class="text-emerald-400 underline underline-offset-2">Click to browse</span> or drag and drop your dataset ZIP
+              </p>
+              <p class="text-xs text-slate-500 mt-1">E.g., <code class="text-slate-400">day_09.zip</code>, <code class="text-slate-400">canopy_batch.zip</code> (~100 MB)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected File Preview Bar (Hidden initially) -->
+        <div id="selected-file-bar" class="hidden mt-4 p-3 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
+          <div class="flex items-center gap-3 truncate">
+            <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+              <i data-lucide="file-check" class="w-5 h-5"></i>
+            </div>
+            <div class="truncate">
+              <p id="selected-file-name" class="text-sm font-medium text-slate-200 truncate">dataset.zip</p>
+              <p id="selected-file-size" class="text-xs text-slate-400">0 MB</p>
+            </div>
+          </div>
+          <button id="remove-file-btn" class="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Upload Progress Bar (during upload) -->
+        <div id="upload-progress-container" class="hidden mt-4 space-y-2">
+          <div class="flex justify-between text-xs text-slate-300">
+            <span id="upload-status-text">Uploading dataset...</span>
+            <span id="upload-percent-text">0%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+            <div id="upload-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-150" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between text-[11px] text-slate-500">
+            <span id="upload-speed-text">0 MB/s</span>
+            <span id="upload-size-text">0 / 0 MB</span>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="mt-5 flex items-center justify-end gap-3">
+          <button id="start-btn" disabled class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-medium text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition-all">
+            <i data-lucide="play" class="w-4 h-4"></i>
+            <span>Upload & Run Pipeline</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Pipeline Execution & Progress Card -->
+      <div id="pipeline-status-card" class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl flex flex-col gap-5">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div id="status-spinner" class="w-3 h-3 rounded-full bg-slate-600"></div>
+            <h3 class="text-sm font-semibold text-white">Pipeline Execution Status</h3>
+          </div>
+          <span id="badge-status" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">Idle</span>
+        </div>
+
+        <!-- Step Indicator Grid -->
+        <div class="grid grid-cols-4 gap-2 text-center text-xs">
+          <div id="step-1" class="step-badge p-2.5 rounded-xl bg-slate-800/50 border border-slate-800 text-slate-400">
+            <i data-lucide="archive" class="w-4 h-4 mx-auto mb-1 text-slate-500"></i>
+            <span>1. Extraction</span>
+          </div>
+          <div id="step-2" class="step-badge p-2.5 rounded-xl bg-slate-800/50 border border-slate-800 text-slate-400">
+            <i data-lucide="sparkles" class="w-4 h-4 mx-auto mb-1 text-slate-500"></i>
+            <span>2. Model Ready</span>
+          </div>
+          <div id="step-3" class="step-badge p-2.5 rounded-xl bg-slate-800/50 border border-slate-800 text-slate-400">
+            <i data-lucide="scan" class="w-4 h-4 mx-auto mb-1 text-slate-500"></i>
+            <span>3. Inference & Fusion</span>
+          </div>
+          <div id="step-4" class="step-badge p-2.5 rounded-xl bg-slate-800/50 border border-slate-800 text-slate-400">
+            <i data-lucide="package-check" class="w-4 h-4 mx-auto mb-1 text-slate-500"></i>
+            <span>4. ZIP Bundle</span>
+          </div>
+        </div>
+
+        <!-- Overall Progress Bar -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center text-xs">
+            <span id="progress-message" class="text-slate-300 font-medium truncate pr-2">Awaiting dataset upload...</span>
+            <span id="progress-percentage" class="text-emerald-400 font-bold font-mono">0%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-slate-700/60">
+            <div id="pipeline-progress-bar" class="bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <div class="flex justify-between text-[11px] text-slate-400">
+            <span id="current-file-label" class="truncate max-w-[280px]">File: -</span>
+            <span id="progress-count-label">0 / 0 images</span>
+          </div>
+        </div>
+
+        <!-- Completed Download Action Banner (Hidden until finished) -->
+        <div id="completed-banner" class="hidden p-4 rounded-xl bg-gradient-to-r from-emerald-950/80 to-teal-950/80 border border-emerald-500/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <i data-lucide="check-circle" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-white">Pipeline Processing Finished!</h4>
+              <p id="completed-stats" class="text-xs text-emerald-300/80">Processed all images into HSIE, Depth Maps & HSI.</p>
+            </div>
+          </div>
+          <a id="download-zip-btn" href="#" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all transform hover:scale-[1.02]">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Download Processed ZIP</span>
+          </a>
+        </div>
+
+        <!-- Live Terminal Log Stream -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="terminal" class="w-3.5 h-3.5 text-slate-500"></i>
+              Execution Log
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono">Live Stream</span>
+          </div>
+          <div id="log-terminal" class="h-32 bg-slate-950/90 rounded-xl p-3 font-mono text-xs text-slate-300 overflow-y-auto border border-slate-800/90 space-y-1 select-text">
+            <div class="text-slate-500">[System] Ready for dataset upload. Model Depth Anything V2 cached.</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- RIGHT STAGE / SIDEBAR: Sample Previews (Col 8 to 12) -->
+    <aside class="lg:col-span-5 flex flex-col gap-6">
+
+      <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-6 shadow-xl flex flex-col h-full">
+        <!-- Sidebar Header -->
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4 mb-4">
+          <div>
+            <h2 class="text-base font-semibold text-white flex items-center gap-2">
+              <i data-lucide="split-square-vertical" class="w-5 h-5 text-emerald-400"></i>
+              Sample Comparisons
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Raw Image &harr; Processed Output</p>
+          </div>
+          <span id="sample-count-badge" class="text-xs px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-slate-700">0 samples</span>
+        </div>
+
+        <!-- Mode Selector for Processed View: HSIE Enhanced, Depth Map, HSI -->
+        <div class="flex items-center gap-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800/80 text-xs mb-3">
+          <button data-view="hsie" class="view-mode-btn flex-1 py-1.5 px-2 rounded-lg font-medium text-emerald-400 bg-slate-800 shadow transition-colors">
+            HSIE Enhanced
+          </button>
+          <button data-view="depth" class="view-mode-btn flex-1 py-1.5 px-2 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-colors">
+            Depth Map
+          </button>
+          <button data-view="hsi" class="view-mode-btn flex-1 py-1.5 px-2 rounded-lg font-medium text-slate-400 hover:text-slate-200 transition-colors">
+            HSI Color
+          </button>
+        </div>
+
+        <!-- Sample Navigator & Dropdown Selector -->
+        <div id="sample-nav-bar" class="hidden flex flex-col gap-2 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80 mb-3 text-xs">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-slate-400 font-medium flex items-center gap-1">
+              <i data-lucide="layers-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+              Select Image:
+            </span>
+            <div class="flex items-center gap-1">
+              <button id="prev-sample-btn" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors" title="Previous Image">
+                <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                <span>Prev</span>
+              </button>
+              <button id="next-sample-btn" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors" title="Next Image">
+                <span>Next</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+              <button id="random-sample-btn" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-emerald-400 flex items-center gap-1 transition-colors" title="Pick Random Sample">
+                <i data-lucide="shuffle" class="w-3 h-3"></i>
+              </button>
+            </div>
+          </div>
+          <select id="sample-select" class="w-full bg-slate-900 border border-slate-700/80 text-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-mono focus:outline-none focus:border-emerald-500">
+            <option value="">Loading available images...</option>
+          </select>
+        </div>
+
+        <!-- Samples Container -->
+        <div id="samples-container" class="flex-1 overflow-y-auto space-y-4 max-h-[700px] pr-1">
+          <!-- Placeholder state when idle -->
+          <div id="samples-empty" class="h-64 flex flex-col items-center justify-center text-center p-6 border border-dashed border-slate-800 rounded-xl text-slate-500">
+            <i data-lucide="image" class="w-10 h-10 mb-2 text-slate-600"></i>
+            <p class="text-sm font-medium text-slate-400">No samples yet</p>
+            <p class="text-xs text-slate-500 mt-1 max-w-[200px]">Once processing begins, sample pairs will be displayed here side-by-side.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- Interactive Comparison Modal (Zoom View) -->
+  <div id="comparison-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-5xl w-full p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh]">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 id="modal-title" class="text-base font-bold text-white truncate">Image Comparison</h3>
+        <button id="modal-close-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 overflow-auto items-center">
+        <div class="space-y-2 text-center">
+          <span class="text-xs font-semibold px-2 py-1 rounded bg-slate-800 text-slate-300">Raw Canopy Image</span>
+          <div class="rounded-xl overflow-hidden border border-slate-700/80 bg-black flex items-center justify-center">
+            <img id="modal-raw-img" src="" alt="Raw" class="max-h-[60vh] object-contain w-full">
+          </div>
+        </div>
+        <div class="space-y-2 text-center">
+          <span id="modal-processed-label" class="text-xs font-semibold px-2 py-1 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Processed Image</span>
+          <div class="rounded-xl overflow-hidden border border-slate-700/80 bg-black flex items-center justify-center">
+            <img id="modal-processed-img" src="" alt="Processed" class="max-h-[60vh] object-contain w-full">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom App Scripts -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
+
